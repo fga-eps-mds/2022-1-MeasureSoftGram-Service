@@ -1,26 +1,13 @@
-from django.test import TestCase
-from django.core.management import call_command
+from service.tests import TestCaseExpanded
 
 
-
-class EntitiesSavedValuesTestCase(TestCase):
-
-    @classmethod
-    def setUpTestData(cls) -> None:
-        call_command("load_initial_data")
-
-    def validate_key(self, key):
-        for c in key:
-            self.assertTrue(
-                c.islower() or  c.isalnum() or c == '_',
-                msg=(
-                    "All characters in key must be lowercase and "
-                    f"alphanumeric. The key is {key} and the "
-                    f"failed char is {c}"
-                ),
-            )
+class EntitiesSavedValuesTestCase(TestCaseExpanded):
 
     def validate_entity_data(self, data):
+        """
+        Função auxiliar para validar se os dados de uma
+        entidade estão respeitando o formato esperado.
+        """
         for key in data.keys():
             self.assertIsInstance(key, str)
 
@@ -29,13 +16,19 @@ class EntitiesSavedValuesTestCase(TestCase):
             "id", "key", "name",
             "description", "latest",
         }
-        self.assertEqual(keys, expected_keys)
+        self.assertEqual(
+            keys,
+            expected_keys,
+            msg=(
+                "As chaves esperadas não foram encontradas. "
+                f"Chaves encontradas: {keys}."
+                f"Chaves esperadas: {expected_keys}."
+            )
+        )
+        self.assertIsInstance(data["id"], int, msg="O id não é um inteiro.")
+        self.validate_key(data["key"])
 
-        self.assertIsInstance(data["id"], int)
-        key = data["key"]
-        self.validate_key(key)
-
-    def test_metrics_saved_values(self):
+    def test_if_repository_metrics_endpoint_is_returning_valid_data(self):
         next_url = (
             "/api/v1/organizations/1/"
             "repository/1/metrics/"
@@ -50,4 +43,3 @@ class EntitiesSavedValuesTestCase(TestCase):
 
             for entity_data in data:
                 self.validate_entity_data(entity_data)
-
