@@ -1,5 +1,5 @@
-from django.test import TestCase
 from django.core.management import call_command
+from django.test import TestCase
 
 
 class TestCaseExpanded(TestCase):
@@ -13,10 +13,9 @@ class TestCaseExpanded(TestCase):
         Função auxiliar para validar se a key das
         entidades seguem o padrão de nomeação definido.
         """
-
         for c in key:
             self.assertTrue(
-                c.islower() or  c.isalnum() or c == '_',
+                c.islower() or c.isalnum() or c == '_',
                 msg=(
                     "All characters in key must be lowercase and "
                     f"alphanumeric. The key is {key} and the "

@@ -60,4 +60,3 @@ class SupportedEntitiesEndointTestCase(
         self.validate_supported_entity_datatype(
             url="/api/v1/supported-characteristics/",
         )
-
