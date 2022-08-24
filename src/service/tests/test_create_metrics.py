@@ -9,6 +9,7 @@ class TestCreateMetricsTestCase(TestCaseExpanded):
         self.assertEqual(response.status_code, 201)
         data = response.json()
         id = data["metric_id"]
+        
         url= f"/api/v1/organizations/1/repository/1/metrics/{id}/" 
         response = self.client.get(path=url)
         self.assertEqual(response.status_code, 200)

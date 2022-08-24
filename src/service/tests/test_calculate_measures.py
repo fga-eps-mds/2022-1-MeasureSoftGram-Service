@@ -8,8 +8,9 @@ class TestCalculateMeasures(TestCaseExpanded):
         response = self.client.post(path=url, data=data, content_type='application/json')
         self.assertEqual(response.status_code, 201)
         data = response.json()
-        value = data["lastest"]["value"]
-        id = data["id"]
+        value = data[0]
+        id = data[0]
+
         url= f"/api/v1/organizations/1/repository/1/measures/{id}/" 
         response = self.client.get(path=url)
         self.assertEqual(response.status_code, 200)
