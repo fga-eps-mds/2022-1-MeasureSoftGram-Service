@@ -44,38 +44,10 @@ class GithubMetricCollector:
     def str_to_datetime(date_str):
         return dt.datetime.strptime(date_str, GITHUB_DATETIME_STR_FORMAT)
 
-    # TODO: Mover para core
-    # def get_team_throughput(self, start_date, end_date):
-    #     date_now = dt.datetime.now().strftime(GITHUB_DATETIME_STR_FORMAT)
-    #     issues = len(self.get_issues(start_date, end_date, ""))
-    #     closedIssues = len(self.get_issues("", date_now, "state=closed"))
-    #     return closedIssues/issues
-
-    # def get_resolved_issues_throughput(self, start_date, end_date):
-
-    #     # Todas as issues criadas dentro do período de tempo com o estado closed
-    #     closed_issues = self.get_issues(start_date, end_date, "state=closed")
-
-    #    a = list(
-    #        filter(
-    #            lambda issue: (
-    #                issue["closed_at"] > start_date and
-    #                issue["closed_at"] < end_date
-    #            ),
-    #            closed_issues
-    #        )
-    #    )
-    #
-    #     return len(a) / len(closed_issues)
-
-    # def get_issue_type_timeframe(self, start_date, end_date, type):
-    #     total_issues = len(self.get_issues(start_date, end_date, ""))
-    #     issues = len(self.get_issues(start_date, end_date, f"label={type}"))
-    #     return issues/total_issues
-
     def get_number_of_issues_resolved_in_the_last_x_days(
         self,
         x: int,
+        label: str = '',
     ) -> int:
         """
         metric: number of issues resolved in the last x days
@@ -83,40 +55,30 @@ class GithubMetricCollector:
         if not isinstance(x, int):
             raise ValueError('x must be an integer')
 
-        date_range = DateRange.create_from_today(x)
-
-        return len(self.get_issues(date_range, "state=closed"))
-
-    def get_number_of_issues_with_such_labels_in_the_last_x_days(
-        self,
-        x: int,
-        labels: List[str],
-    ) -> int:
-        if not isinstance(x, int):
-            raise ValueError('x must be an integer')
-
-        # Se a lista for vazia ou ao menos um item não for uma string
-        if not labels or any(not isinstance(label, str) for label in labels):
-            raise ValueError('labels must be a list of strings')
-
-        labels: str = ','.join(labels)
+        if not isinstance(label, str):
+            raise ValueError('label must be a string')
 
         date_range = DateRange.create_from_today(x)
 
-        return len(self.get_issues(date_range, f"labels={labels}"))
+        return len(self.get_issues(date_range, f"state=closed&labels={label}"))
 
     def get_total_number_of_issues_in_the_last_x_days(
         self,
         x: int,
+        label: str = ''
     ) -> int:
         """
         metric: total number of issues in a given timeframe
         """
+        if not isinstance(x, int):
+            raise ValueError('x must be an integer')
+
+        if not isinstance(label, str):
+            raise ValueError('label must be a string')
+
         date_range = DateRange.create_from_today(x)
 
-        issues = self.get_issues(date_range)
-
-        return len(issues)
+        return len(self.get_issues(date_range, f"labels={label}"))
 
     def __get_all_build_pipelines_executed_in_the_last_x_days(
         self,
