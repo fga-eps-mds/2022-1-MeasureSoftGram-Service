@@ -66,8 +66,7 @@ class PreConfig(models.Model):
             for subcharacteristic in characteristic['subcharacteristics']:
                 for measure in subcharacteristic['measures']:
                     if measure['key'] == measure_key:
-                        # No JSON o peso é um float entre 0 e 100
-                        return measure['weight'] / 100
+                        return measure['weight']
 
         raise utils.exceptions.MeasureNotDefinedInPreConfiguration(
             f'Measure {measure_key} not defined in pre-configuration',
@@ -77,7 +76,7 @@ class PreConfig(models.Model):
         for characteristic in self.data['characteristics']:
             for subcharacteristic in characteristic['subcharacteristics']:
                 if subcharacteristic['key'] == subcharacteristic_key:
-                    return subcharacteristic['weight'] / 100
+                    return subcharacteristic['weight']
 
         raise utils.exceptions.SubCharacteristicNotDefinedInPreConfiguration((
             f'Subcharacteristic {subcharacteristic_key} '
