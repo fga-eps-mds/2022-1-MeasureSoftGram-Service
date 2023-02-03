@@ -3,8 +3,9 @@ from django.utils import timezone
 
 import utils
 from characteristics.models import SupportedCharacteristic
-from measures.models import SupportedMeasure
 from subcharacteristics.models import SupportedSubCharacteristic
+from measures.models import SupportedMeasure
+from metrics.models import SupportedMetric
 from utils.exceptions import InvalidPreConfigException
 
 
@@ -43,7 +44,11 @@ class PreConfig(models.Model):
         if self.id:
             raise ValueError("It's not allowed to edit a pre-configuration")
 
+        self.validate_metrics(self.data)
+        self.validate_metrics_weights(self.data)
+
         self.validate_measures(self.data)
+        self.validate_measures_metrics_relation(self.data)
         self.validate_measures_weights(self.data)
 
         self.validate_subcharacteristics(self.data)
@@ -119,9 +124,101 @@ class PreConfig(models.Model):
             for subcharac in charac['subcharacteristics']
             for measure in subcharac['measures']
         ]
+
+        print(self.data)
+
+        # for charac in self.data["characteristics"]:
+        #     for subcharac in charac['subcharacteristics']:
+        #         for measure in subcharac['measures']:
+        #             print(measure)
+                    
         return SupportedMeasure.objects.filter(
             key__in=measures_keys,
         )
+
+    def get_metrics_qs(self):
+
+        for charac in self.data["characteristics"]:
+            for subcharac in charac['subcharacteristics']:
+                for measure in subcharac['measures']:
+                    print(measure)
+
+        # metrics_keys = [
+        #     metric['key']
+        #     for charac in self.data["characteristics"]
+        #     for subcharac in charac['subcharacteristics']
+        #     for measure in subcharac['measures']
+        #     for metric in measure['metrics']
+        # ]
+        return SupportedMetric.objects.filter(
+            key__in=metrics_keys,
+        )
+
+    
+
+    @staticmethod
+    def validate_metrics(data: dict):
+        """
+        Valida se as métricas são válidas
+
+        Raises a `InvalidPreConfigException` caso alguma métrica não seja válida
+        """
+        
+        for characteristic in data['characteristics']:
+            for subcharacteristic in characteristic['subcharacteristics']:
+                for measure in subcharacteristic['measures']:
+                    for metric in measure['metrics']:
+                        if metric not in SupportedMetric.objects.values_list(
+                            'key', flat=True
+                        ):
+                            raise InvalidPreConfigException(
+                                f'Metric {metric} is not supported'
+                            )
+    
+    @staticmethod
+    def validate_metrics_weights(data: dict):
+        """
+        Valida se os pesos das métricas são válidos
+
+        Raises a `InvalidPreConfigException` caso algum peso não seja válido
+        """
+        for characteristic in data['characteristics']:
+            for subcharacteristic in characteristic['subcharacteristics']:
+                for measure in subcharacteristic['measures']:
+                    for metric in measure['metrics']:
+                        if metric['weight'] < 0 or metric['weight'] > 1:
+                            raise InvalidPreConfigException(
+                                f'Weight {metric["weight"]} is not valid'
+                            )
+
+    @staticmethod
+    def validate_measures_metrics_relation(data: dict):
+        """
+        Valida se as medidas estão relacionadas com as métricas
+        na pré-configuração são realmente relacionadas com as
+        medidas no modelo
+
+        Raises a `InvalidPreConfigException` caso alguma medida não seja relacionada
+        """
+
+        for characteristic in data['characteristics']:
+            for subcharacteristic in characteristic['subcharacteristics']:
+                for measure in subcharacteristic['measures']:
+                    measure_key = measure['key']
+                    measure_metrics = measure['metrics']
+
+                    supported_measure = SupportedMeasure.objects.get(
+                        key=measure_key,
+                    )
+                    supported_measure_metrics = supported_measure.metrics
+
+                    if not set(measure_metrics).issubset(
+                        set(supported_measure_metrics)
+                    ):
+                        raise InvalidPreConfigException(
+                            f'The measure {measure_key} is not related to '
+                            f'the metrics {measure_metrics} in the model'
+                        )
 
     @staticmethod
     def validate_measures(data: dict):

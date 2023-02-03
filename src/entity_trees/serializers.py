@@ -3,8 +3,9 @@ from rest_framework import serializers
 from characteristics.models import SupportedCharacteristic
 from characteristics.serializers import SupportedCharacteristicSerializer
 from measures.serializers import SupportedMeasureSerializer
-from pre_configs.models import PreConfig
 from subcharacteristics.serializers import SupportedSubCharacteristicSerializer
+from metrics.serializers import SupportedMetricSerializer
+from pre_configs.models import PreConfig
 
 
 class CharacteristicEntityRelationshipTreeSerializer(
@@ -103,10 +104,12 @@ def pre_config_to_entity_tree(pre_config: PreConfig):
     characteristics_qs = pre_config.get_characteristics_qs()
     subcharacteristics_qs = pre_config.get_subcharacteristics_qs()
     measures_qs = pre_config.get_measures_qs()
+    # metrics_qs = pre_config.get_metrics_qs()
 
     characteristics_dict = qs_to_dict(characteristics_qs)
     subcharacteristics_dict = qs_to_dict(subcharacteristics_qs)
     measures_dict = qs_to_dict(measures_qs)
+    # metrics_dict = qs_to_dict(metrics_qs)
 
     data = []
 
@@ -126,11 +129,24 @@ def pre_config_to_entity_tree(pre_config: PreConfig):
 
             for measure in subcharac['measures']:
 
-                m_data = SupportedMeasureSerializer(
+                measure_data = SupportedMeasureSerializer(
                     measures_dict[measure['key']],
                 ).data
 
-                s_data['measures'].append(m_data)
+                print(measure_data)
+
+                # measure_data['metrics'] = []
+                # print(measure)
+
+                # for metric in measure['metrics']:
+
+                #     metrics_data['metrics'].append(
+                #         SupportedMetricSerializer(
+                #             metrics_dict[metric['key']],
+                #         ).data,
+                #     )
+
+                s_data['measures'].append(measure_data)
 
             c_data['subcharacteristics'].append(s_data)
 
